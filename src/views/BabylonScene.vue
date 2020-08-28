@@ -1,12 +1,9 @@
 <template>
     <v-container fluid class="big-iframe">
       <v-row class="mb-6 big-iframe" no-gutters>
-        <v-col sm="12" lg="12">
-          <canvas id="renderCanvas" ref="canvasEle" class="big-iframe" style="height: 60vh;">
-              <div>
-                  Enhanced
-              </div>
-          </canvas>
+        <v-col class="big-iframe" sm="12" lg="12">
+          <canvas id="renderCanvas" ref="canvasEle" ></canvas>
+          <h1 class="scene-label">{{ sceneTitle }}</h1>
         </v-col>
       </v-row>
     </v-container>
@@ -21,6 +18,7 @@ import * as BABYLON from 'babylonjs';
 export default class BabylonScene extends Vue {
 
     @Prop() gizmoSetup: any;    // GizmoSetup API
+    @Prop() sceneTitle: any;    // Title
     @Ref() canvasEle: any;
 
     mounted() {

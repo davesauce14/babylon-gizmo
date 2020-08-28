@@ -1,7 +1,6 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <h1>The purpose of this project is to shocase BabylonJs Gizmo Enhancements</h1>
   </div>
 </template>
 

@@ -8,6 +8,12 @@ Vue.use(VueRouter)
   {
     path: '/',
     name: 'Home',
+    //component: Home
+    redirect: 'position'
+  },
+  {
+    path: '/home',
+    name: 'home',
     component: Home
   },
   {

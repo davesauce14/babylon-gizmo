@@ -5,7 +5,7 @@
       app
     >
       <v-list dense>
-        <v-list-item link>
+        <v-list-item link to="home">
           <v-list-item-action>
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>

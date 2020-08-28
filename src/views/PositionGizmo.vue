@@ -1,14 +1,30 @@
 <template>
   <v-container fluid class="big-iframe">
-      <v-row class="mt-4" no-gutters>
-        <v-col sm="12" lg="12"><h1 fluid>Position Gizmo</h1></v-col>
-      </v-row>
-    <v-row class="mb-6 big-iframe" no-gutters>
-      <v-col sm="12" lg="6">
-        <babylon-scene :gizmoSetup="gizmoSetup"></babylon-scene>
+    <v-row class="mt-4" no-gutters>
+      <v-col sm="12" lg="12">
+        <h1 fluid>Position Gizmo</h1>
       </v-col>
-      <v-col sm="12" lg="6">
-        <babylon-scene :gizmoSetup="defaultGizmoSetup"></babylon-scene>
+    </v-row>
+    <v-row class="big-iframe" style="height: 60vh;" no-gutters>
+      <v-col class="big-iframe" sm="12" lg="6">
+        <babylon-scene sceneTitle="Enhanced" :gizmoSetup="gizmoSetup"></babylon-scene>
+      </v-col>
+      <v-col class="big-iframe" sm="12" lg="6">
+        <babylon-scene sceneTitle="Default" :gizmoSetup="defaultGizmoSetup"></babylon-scene>
+      </v-col>
+    </v-row>
+    <v-row no-gutters v-if="features.length">
+      <v-col sm="12" lg="12">
+        <h1 fluid class="mb-5">Features</h1>
+        <v-card class="mx-auto" max-width="1000px" style="text-align: initial;" tile>
+
+          <v-list-item three-line v-for="feature in features" :key="feature.name">
+            <v-list-item-content>
+              <v-list-item-title>{{ feature.name }}</v-list-item-title>
+              <v-list-item-subtitle v-for="desc in feature.description.split('.')" :key="desc">{{desc}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -17,17 +33,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
 import BabylonScene from "./BabylonScene.vue";
-import {
-  UtilityLayerRenderer,
-  Scene,
-  StandardMaterial,
-  TransformNode,
-  CylinderBuilder,
-  Color3,
-  Mesh,
-  LinesMesh,
-  Vector3
-} from "babylonjs";
+import { UtilityLayerRenderer, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3 } from "babylonjs";
 import * as BABYLON from "babylonjs";
 
 @Component({
@@ -36,24 +42,47 @@ import * as BABYLON from "babylonjs";
   }
 })
 export default class PositionGizmo extends Vue {
-  meshMap: Map<Mesh, any> = new Map();
+
+  // For UI
+  features: any[] = [];
+
+  // For Gizmo
+  meshMap: Map<Mesh, any> = new Map();  // Node Caching for quick lookup
   dragging = false;
+
+
+  mounted(){
+      fetch('/position.json')
+        .then(res => res.json())
+        .then(data => {
+            console.log('position data', data);
+            this.features = data;
+        })
+  }
 
   defaultGizmoSetup(scene: Scene) {
     // Initialize GizmoManager
     const gizmoManager = new BABYLON.GizmoManager(scene);
-
     // Initialize all gizmos
     gizmoManager.positionGizmoEnabled = true;
-    // gizmoManager.boundingBoxGizmoEnabled=true;
-    // gizmoManager.rotationGizmoEnabled = true;
-    // gizmoManager.scaleGizmoEnabled = true;
-    // gizmoManager.gizmos.positionGizmo = new EnhancedPositionGizmo(util);
+    this.registerKeyEvent(gizmoManager);
+    
+  }
+  registerKeyEvent(gizmoManager: any) {
+    document
+        .onkeydown = function(e) {
+            if(e.key == 'a'){
+                // Toggle planar
+                gizmoManager.gizmos.positionGizmo.planarGizmoEnabled = !gizmoManager.gizmos.positionGizmo.planarGizmoEnabled;
+            }
+      }
   }
   gizmoSetup(scene: Scene) {
-
     // Initialize GizmoManager
     const gizmoManager = new BABYLON.GizmoManager(scene);
+
+    // Register Controls
+    this.registerKeyEvent(gizmoManager);
 
     // Initialize all gizmos
     gizmoManager.positionGizmoEnabled = true;
@@ -65,15 +94,39 @@ export default class PositionGizmo extends Vue {
 
     // Set Custom Mesh X
     const xColor = this.colorHelper(Color3.Red(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.xGizmo?.setCustomMesh(this._CreateArrow(utilityScene, Color3.Red(), thickness, "x", colliderVisibility));
+    gizmoManager?.gizmos?.positionGizmo?.xGizmo?.setCustomMesh(
+      this._CreateArrow(
+        utilityScene,
+        Color3.Red(),
+        thickness,
+        "x",
+        colliderVisibility
+      )
+    );
 
     // // Set Custom Mesh Y
     const yColor = this.colorHelper(Color3.Green(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.yGizmo?.setCustomMesh(this._CreateArrow(utilityScene, Color3.Green(), thickness, "y", colliderVisibility));
+    gizmoManager?.gizmos?.positionGizmo?.yGizmo?.setCustomMesh(
+      this._CreateArrow(
+        utilityScene,
+        Color3.Green(),
+        thickness,
+        "y",
+        colliderVisibility
+      )
+    );
 
     // Set Custom Mesh Z
     const zColor = this.colorHelper(Color3.Blue(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.zGizmo?.setCustomMesh(this._CreateArrow(utilityScene, Color3.Blue(), thickness, "z", colliderVisibility));
+    gizmoManager?.gizmos?.positionGizmo?.zGizmo?.setCustomMesh(
+      this._CreateArrow(
+        utilityScene,
+        Color3.Blue(),
+        thickness,
+        "z",
+        colliderVisibility
+      )
+    );
 
     this.positionGizmoSyncLogic(utilityScene);
 
@@ -82,82 +135,75 @@ export default class PositionGizmo extends Vue {
 
   _CreateArrow(scene: Scene, color: Color3, thickness = 1, axis: string, colliderVisibility = 0): any {
 
-        // Parent
-        const arrow = new TransformNode("arrow", scene);
+    // Parent
+    const arrow = new TransformNode("arrow", scene);
 
-        // Geometry
-        const cylinder = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0, height: 0.075, diameterBottom: 0.0375 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
-        const cylinderBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.1 * (1 + (thickness - 1) / 4), height: 0.1, diameterBottom: 0.1 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
-        const line = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0.005 * thickness, height: 0.275, diameterBottom: 0.005 * thickness, tessellation: 96 }, scene);
-        const lineBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.07 * thickness, height: 0.275, diameterBottom: 0.07 * thickness, tessellation: 96 }, scene);
+    // Geometry
+    const cylinder = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0, height: 0.075, diameterBottom: 0.0375 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
+    const cylinderBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.1 * (1 + (thickness - 1) / 4), height: 0.1, diameterBottom: 0.1 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
+    const line = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0.005 * thickness, height: 0.275, diameterBottom: 0.005 * thickness, tessellation: 96 }, scene);
+    const lineBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.07 * thickness, height: 0.275, diameterBottom: 0.07 * thickness, tessellation: 96 }, scene);
 
-        // Material
-        const material = this.colorHelper(color, scene);
-        const hoverMaterial = this.colorHelper(Color3.Yellow(), scene);
-        const invisibleMaterial = this.colorHelper(Color3.Gray(), scene);
+    // Material
+    const material = this.colorHelper(color, scene);
+    const hoverMaterial = this.colorHelper(Color3.Yellow(), scene);
+    const invisibleMaterial = this.colorHelper(Color3.Gray(), scene);
+    invisibleMaterial.alpha = colliderVisibility;
 
-        // const hoverMaterial = new StandardMaterial("", scene);
-        // hoverMaterial.diffuseColor = color.add(new Color3(0.3, 0.3, 0.3));
-        invisibleMaterial.alpha = colliderVisibility;
+    // Position arrow pointing in its drag axis
+    cylinder.material = material;
+    cylinder.rotation.x = Math.PI / 2;
+    cylinder.position.z += 0.3;
+    cylinder.parent = arrow;
 
-        // Position arrow pointing in its drag axis
-        cylinder.material = material;
-        cylinder.rotation.x = Math.PI / 2;
-        cylinder.position.z += 0.3;
-        cylinder.parent = arrow;
+    line.material = material;
+    line.position.z += 0.275 / 2;
+    line.rotation.x = Math.PI / 2;
+    line.parent = arrow;
 
-        line.material = material;
-        line.position.z += 0.275 / 2;
-        line.rotation.x = Math.PI / 2;
-        line.parent = arrow;
+    // For larger Bounding Border
+    cylinderBox.rotation.x = Math.PI / 2;
+    cylinderBox.position.z += 0.3;
+    cylinderBox.material = invisibleMaterial;
+    cylinderBox.parent = arrow;
 
-        // For larger Bounding Border
-        cylinderBox.rotation.x = Math.PI / 2;
-        cylinderBox.position.z += 0.3;
-        cylinderBox.material = invisibleMaterial;
-        cylinderBox.parent = arrow;
+    lineBox.material = invisibleMaterial;
+    lineBox.position.z += 0.275 / 2;
+    lineBox.rotation.x = Math.PI / 2;
+    lineBox.parent = arrow;
 
-        lineBox.material = invisibleMaterial;
-        lineBox.position.z += 0.275 / 2;
-        lineBox.rotation.x = Math.PI / 2;
-        lineBox.parent = arrow;
+    arrow.scaling.scaleInPlace(1 / 3);
 
-        arrow.scaling.scaleInPlace(1 / 3);
-        //arrow.lookAt(new Vector3(0,0,0).add(new Vector3(0,0,1)));
-
-        if (axis === 'x') {
-            arrow.rotation.y = Math.PI / 2;
-            arrow.rotation.z = Math.PI / 2;
-        } else if (axis === 'y') {
-            // mesh.rotation.y = Math.PI / 2;
-            arrow.rotation.x = Math.PI / 2 * -1;
-        }
-
-        const temp = {
-          material,
-          hoverMaterial,
-          name: axis,
-          active: false
-        }
-        this.meshMap.set(arrow as any, temp)
-        // this.meshList.push(arrow as any);
-        return arrow;
+    if (axis === "x") {
+      arrow.rotation.y = Math.PI / 2;
+      arrow.rotation.z = Math.PI / 2;
+    } else if (axis === "y") {
+      arrow.rotation.x = (Math.PI / 2) * -1;
     }
 
-    colorHelper(color: Color3, scene: Scene) {
-      // todo: add mats to array and destroy gracefully
-      const mat = new StandardMaterial("", scene);
-      mat.diffuseColor = color;
-      mat.emissiveColor = color;
-      mat.specularColor = color.subtract(new Color3(0.1, 0.1, 0.1));
-      return mat;
-    }
+    const temp = {
+      material,
+      hoverMaterial,
+      name: axis,
+      active: false
+    };
+    this.meshMap.set(arrow as any, temp);
+    return arrow;
+  }
 
-    positionGizmoSyncLogic (scene: Scene) {
+  colorHelper(color: Color3, scene: Scene) {
+    // todo: add mats to array and destroy gracefully
+    const mat = new StandardMaterial("", scene);
+    mat.diffuseColor = color;
+    mat.emissiveColor = color;
+    mat.specularColor = color.subtract(new Color3(0.1, 0.1, 0.1));
+    return mat;
+  }
+
+  positionGizmoSyncLogic (scene: Scene) {
 
       const nonHovered = this.colorHelper(Color3.Gray(), scene);
       nonHovered.alpha = .4;
-
 
       const _pointerObserver = scene.onPointerObservable.add((pointerInfo) => {
         if(pointerInfo.pickInfo) {
@@ -179,7 +225,6 @@ export default class PositionGizmo extends Vue {
                   }
               });
             })
-                
           }
 
           // On Mouse Down
@@ -224,7 +269,6 @@ export default class PositionGizmo extends Vue {
           }
         }
       });
-    
-  }
+    }
 }
 </script>
