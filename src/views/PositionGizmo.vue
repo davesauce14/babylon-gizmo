@@ -15,7 +15,7 @@
     </v-row>
     <v-row no-gutters v-if="features.length">
       <v-col sm="12" lg="12">
-        <h1 fluid class="mb-5">Features</h1>
+        <h1 fluid class="ma-5">Features</h1>
         <v-card class="mx-auto" max-width="1000px" style="text-align: initial;" tile>
 
           <v-list-item three-line v-for="feature in features" :key="feature.name">

@@ -5,7 +5,6 @@
     display: flex;
     flex-wrap: wrap;
     text-align: center;
-    height: -webkit-fill-available;
 }
 
 .scene-label {
