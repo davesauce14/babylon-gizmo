@@ -2,7 +2,7 @@
   <v-container fluid class="big-iframe">
     <v-row class="mt-4" no-gutters>
       <v-col sm="12" lg="12">
-        <h1 fluid>Rotation Gizmo</h1>
+        <h1 fluid>Scale Gizmo</h1>
       </v-col>
     </v-row>
     <v-row class="big-iframe" style="height: 60vh;" no-gutters>
@@ -35,13 +35,15 @@ import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
 import BabylonScene from "./BabylonScene.vue";
 import { UtilityLayerRenderer, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3 } from "babylonjs";
 import * as BABYLON from "babylonjs";
+import GizmoHelper from '../gizmo/GizmoHelper';
+import { EnhancedScalingGizmo } from '../gizmo/EnhancedScalingGizmo'
 
 @Component({
   components: {
     BabylonScene
   }
 })
-export default class RotationGizmo extends Vue {
+export default class ScaleGizmo extends Vue {
 
   // For UI
   features: any[] = [];
@@ -52,7 +54,7 @@ export default class RotationGizmo extends Vue {
 
 
   mounted(){
-      fetch('/position.json')
+      fetch('/scale.json')
         .then(res => res.json())
         .then(data => {
             this.features = data;
@@ -63,7 +65,7 @@ export default class RotationGizmo extends Vue {
     // Initialize GizmoManager
     const gizmoManager = new BABYLON.GizmoManager(scene);
     // Initialize all gizmos
-    gizmoManager.rotationGizmoEnabled = true;
+    gizmoManager.scaleGizmoEnabled = true;
     this.registerKeyEvent(gizmoManager);
     
   }
@@ -77,35 +79,10 @@ export default class RotationGizmo extends Vue {
     //   }
   }
   gizmoSetup(scene: Scene) {
-    // Initialize GizmoManager
-    const gizmoManager = new BABYLON.GizmoManager(scene);
 
-    // Register Controls
-    this.registerKeyEvent(gizmoManager);
-
-    // Initialize all gizmos
-    gizmoManager.rotationGizmoEnabled = true;
-
-    const utilityScene = gizmoManager.utilityLayer.utilityLayerScene;
-
-    const thickness = 0.7;
-    const colliderVisibility = 0;
-
-    // Set Custom Mesh X
-    const xColor = this.colorHelper(Color3.Red(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.xGizmo?.setCustomMesh( this._CreateArrow( utilityScene, Color3.Red(), thickness, "x", colliderVisibility ) );
-
-    // // Set Custom Mesh Y
-    const yColor = this.colorHelper(Color3.Green(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.yGizmo?.setCustomMesh( this._CreateArrow( utilityScene, Color3.Green(), thickness, "y", colliderVisibility ) );
-
-    // Set Custom Mesh Z
-    const zColor = this.colorHelper(Color3.Blue(), utilityScene);
-    gizmoManager?.gizmos?.positionGizmo?.zGizmo?.setCustomMesh( this._CreateArrow( utilityScene, Color3.Blue(), thickness, "z", colliderVisibility ) );
-
-    this.positionGizmoSyncLogic(utilityScene);
-
-    console.log(this.meshMap);
+    const gizmo = new EnhancedScalingGizmo(scene);
+    gizmo.create();
+    
   }
 
   _CreateArrow(scene: Scene, color: Color3, thickness = 1, axis: string, colliderVisibility = 0): any {

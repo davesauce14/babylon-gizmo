@@ -1,0 +1,18 @@
+[
+    {
+        "name": "Hover Action Larger Threshold",
+        "description": "Its almost impossible to click on the Gizmo, unless you are on the exact pixel. For this: a larger invisible mesh was created which acts like a collider, which the pointer can interact with."
+    },
+    {
+        "name": "Hover state",
+        "description": "Currently there is no hover state being maintained when grabbing the gizmo. Even if your dragging the gizmo, if your mouse leaves the mesh the hover material will dissappear. For this we have added a dragged state"
+    },
+    {
+        "name": "'Grey out' other axis while manipulating Gizmo",
+        "description": "This has been achieved by maintaining state between the three clickable meshes"
+    },
+    {
+        "name": "Gizmo moves while user drags",
+        "description": "Currently when the user drags only the geometry will move, the gizmo remains the same. This makes the experience pretty weak, and will actually cause an issue while scaling disabled objects."
+    }
+]

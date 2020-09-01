@@ -21,6 +21,14 @@
             <v-list-item-title>Position Gizmo</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item link to="scale">
+          <v-list-item-action>
+            <v-icon>mdi-unity</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Scale Gizmo</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item link to="rotation">
           <v-list-item-action>
             <v-icon>mdi-unity</v-icon>
