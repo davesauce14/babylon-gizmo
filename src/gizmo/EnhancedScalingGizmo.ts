@@ -16,7 +16,7 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
 
         if(gizmo && gizmo.xGizmo && gizmo.yGizmo && gizmo.zGizmo) {
 
-            const thickness = 0.7;
+            const thickness = 1;
             const colliderVisibility = 0;
     
             const xMesh = this.createScaleGizmo(gizmo.xGizmo, this.utilityScene, Color3.Red(), thickness, "x", colliderVisibility);
@@ -115,7 +115,8 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
         );
         const lineMesh = CylinderBuilder.CreateCylinder(
             isCollider ? 'ignore' : "cylinder", 
-            { diameterTop: 0.005 * thickness * (scale * colliderScaler), height: 0.275, diameterBottom: 0.005 * thickness * (scale * (colliderScaler / 2)), tessellation: 96 }, 
+            { diameterTop: 0.005 * thickness * (scale * colliderScaler), height: 0.275, diameterBottom: 0.005 * thickness * (scale), tessellation: 96 }, 
+            // { diameterTop: 0.005 * thickness * (scale * colliderScaler), height: 0.275, diameterBottom: 0.005 * thickness * (scale * (colliderScaler / 2)), tessellation: 96 }, 
             scene
         );
         lineMesh.material = coloredMaterial;
