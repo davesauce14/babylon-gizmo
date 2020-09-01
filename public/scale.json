@@ -14,5 +14,13 @@
     {
         "name": "Gizmo moves while user drags",
         "description": "Currently when the user drags only the geometry will move, the gizmo remains the same. This makes the experience pretty weak, and will actually cause an issue while scaling disabled objects."
+    },
+    {
+        "name": "Increase Scale Speed for Y axis",
+        "description": "Y Axis scaling is severly slow for some reason, have increased to match other axis"
+    },
+    {
+        "name": "Universal Scaler Enhanced Experience",
+        "description": "Universal Scalar will increase the scalars from the other axis, similar to Unity's"
     }
 ]
