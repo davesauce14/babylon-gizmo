@@ -1,11 +1,10 @@
 import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager } from "babylonjs";
-import * as BABYLON from "babylonjs";
 import { EnhancedGizmo } from './EnhancedGizmo';
 
 
 export class EnhancedPositionGizmo extends EnhancedGizmo {
 
-    constructor(public scene: Scene) {
+    constructor(public scene: Scene, private thickness = 0.7, private colliderVisibility = 0) {
         super(scene);
     }
 
@@ -15,42 +14,39 @@ export class EnhancedPositionGizmo extends EnhancedGizmo {
         const gizmo = this.gizmoManager?.gizmos?.positionGizmo;
 
         if(gizmo && gizmo.xGizmo && gizmo.yGizmo && gizmo.zGizmo) {
-
-            const thickness = 0.7;
-            const colliderVisibility = 0;
     
             // Set Custom Mesh X
-            const xMesh = this.createPositionMesh( this.utilityScene, Color3.Red(), thickness, "x", colliderVisibility );
+            const xMesh = this.createPositionMesh(Color3.Red(), "x" );
             gizmo.xGizmo.setCustomMesh(xMesh);
 
             // // Set Custom Mesh Y
-            const yMesh = this.createPositionMesh( this.utilityScene, Color3.Green(), thickness, "y", colliderVisibility );
+            const yMesh = this.createPositionMesh(Color3.Green(), "y" );
             gizmo.yGizmo.setCustomMesh(yMesh);
 
             // Set Custom Mesh Z
-            const zMesh = this.createPositionMesh( this.utilityScene, Color3.Blue(), thickness, "z", colliderVisibility )
+            const zMesh = this.createPositionMesh(Color3.Blue(), "z" )
             gizmo.zGizmo.setCustomMesh(zMesh);
 
             this.gizmoMouseObservers(this.utilityScene);
         }
     }
 
-    createPositionMesh(scene: Scene, color: Color3, thickness = 1, axis: string, colliderVisibility = 0): any {
+    createPositionMesh(color: Color3, axis: string): any {
 
         // Parent
-        const arrow = new TransformNode("arrow", scene);
+        const arrow = new TransformNode("arrow", this.utilityScene);
     
         // Geometry
-        const cylinder = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0, height: 0.075, diameterBottom: 0.0375 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
-        const cylinderBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.1 * (1 + (thickness - 1) / 4), height: 0.1, diameterBottom: 0.1 * (1 + (thickness - 1) / 4), tessellation: 96 }, scene);
-        const line = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0.005 * thickness, height: 0.275, diameterBottom: 0.005 * thickness, tessellation: 96 }, scene);
-        const lineBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.07 * thickness, height: 0.275, diameterBottom: 0.07 * thickness, tessellation: 96 }, scene);
+        const cylinder = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0, height: 0.075, diameterBottom: 0.0375 * (1 + (this.thickness - 1) / 4), tessellation: 96 }, this.utilityScene);
+        const cylinderBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.1 * (1 + (this.thickness - 1) / 4), height: 0.1, diameterBottom: 0.1 * (1 + (this.thickness - 1) / 4), tessellation: 96 }, this.utilityScene);
+        const line = CylinderBuilder.CreateCylinder("cylinder", { diameterTop: 0.005 * this.thickness, height: 0.275, diameterBottom: 0.005 * this.thickness, tessellation: 96 }, this.utilityScene);
+        const lineBox = CylinderBuilder.CreateCylinder("ignore", { diameterTop: 0.07 * this.thickness, height: 0.275, diameterBottom: 0.07 * this.thickness, tessellation: 96 }, this.utilityScene);
     
         // Material
-        const material = this.colorHelper(color, scene);
-        const hoverMaterial = this.colorHelper(Color3.Yellow(), scene);
-        const invisibleMaterial = this.colorHelper(Color3.Gray(), scene);
-        invisibleMaterial.alpha = colliderVisibility;
+        const material = this.colorHelper(color, this.utilityScene);
+        const hoverMaterial = this.colorHelper(Color3.Yellow(), this.utilityScene);
+        const invisibleMaterial = this.colorHelper(Color3.Gray(), this.utilityScene);
+        invisibleMaterial.alpha = this.colliderVisibility;
     
         // Position arrow pointing in its drag axis
         cylinder.material = material;
