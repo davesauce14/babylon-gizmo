@@ -171,7 +171,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         // console.log(this.utilityScene.activeCamera);
         if (this.utilityScene.activeCamera) {
             const camVec = this.utilityScene.activeCamera.position.subtract(gizmo?.attachedMesh?.position as any);
-            console.log('regular', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
+            // console.log('regular', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
             if (Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0) {
                 planeNormalTowardsCamera.scaleInPlace(-1);
                 localPlaneNormalTowardsCamera.scaleInPlace(-1);
@@ -199,7 +199,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         // console.log(this.utilityScene.activeCamera);
         if (this.utilityScene.activeCamera) {
             const camVec = this.utilityScene.activeCamera.position.subtract(gizmo?._rootMesh.position as any);
-            console.log('other', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
+            // console.log('other', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
             if (Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0) {
                 // planeNormalTowardsCamera.scaleInPlace(-1);
                 // localPlaneNormalTowardsCamera.scaleInPlace(-1);
