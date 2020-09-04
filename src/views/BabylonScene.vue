@@ -39,7 +39,7 @@ export default class BabylonScene extends Vue {
         this.gizmoSetup(scene);
 
         // Create objects
-        const hdrTexture = BABYLON.CubeTexture.CreateFromPrefilteredData("https://playground.babylonjs.com/textures/environment.dds", scene);
+        const hdrTexture = BABYLON.CubeTexture.CreateFromPrefilteredData("https://playground.babylonjs.com/textures/Runyon_Canyon_A_2k_cube_specular.env", scene);
         const hdrSkybox = BABYLON.Mesh.CreateBox("hdrSkyBox", 1000.0, scene);
         hdrSkybox.isPickable = false;
         const hdrSkyboxMaterial = new BABYLON.PBRMaterial("skyBox", scene);
