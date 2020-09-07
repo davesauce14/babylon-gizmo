@@ -1,4 +1,4 @@
-import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager, MeshBuilder, PlaneRotationGizmo, BabylonFileLoaderConfiguration, Quaternion, Gizmo, Nullable, RotationGizmo, Matrix } from "babylonjs";
+import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager, MeshBuilder, PlaneRotationGizmo, BabylonFileLoaderConfiguration, Quaternion, Gizmo, Nullable, RotationGizmo, Matrix, Angle } from "babylonjs";
 import * as BABYLON from "babylonjs";
 import { EnhancedGizmo } from './EnhancedGizmo';
 
@@ -71,7 +71,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
             planeNormal = new Vector3(0, 0, 1);
         }
 
-        // Closures
+        // Axis Gizmo Closures
         let dragDistance = 0;
         const rotationCirclePaths: any[] = [];
         const rotationCircle: Mesh = this.setupRotationCircle(rotationCirclePaths, parentMesh);
@@ -92,34 +92,20 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
             const direction = rotationCircle.getDirection(forward);
             direction.normalize();
 
-            // const test = Mesh.CreateBox("", .05, this.utilityScene);
-            // test.position = direction.clone();
-
+            // Remove Rotation Circle from parent mesh before drag interaction
             parentMesh.removeChild(rotationCircle);
             
             lastDragPosition.copyFrom(e.dragPlanePoint);
             dragPlanePoint = e.dragPlanePoint;
-            // dragPlanePoint = lastDragPosition.subtract((gizmo.attachedMesh?.absolutePosition as any)).normalize();
-
-            // z
             let originalVector = new Vector3(0, 0, 1);
             originalVector = rotationCircle.getAbsolutePosition().clone().addInPlace(direction);
-            //const originalVector = savedPosition;
             const clickedVector = e.dragPlanePoint;
-            const angle = this.calculateAngle(originalVector, clickedVector, localPlaneNormalTowardsCamera, gizmo, rotationMatrix, planeNormalTowardsCamera);
+            let angle = this.calculateAngle(originalVector, clickedVector, localPlaneNormalTowardsCamera, gizmo, rotationMatrix, planeNormalTowardsCamera);
 
-            // const cross = Vector3.Cross(clickedVector, originalVector);
-            // thing2.position = rotationCircle.rotation.add(Vector3.Forward())
-
-            // z
+             if(Vector3.Dot(rotationCircle.up, Vector3.Down()) > 0) {
+                angle = -angle;
+            }
             rotationCircle.addRotation(0, angle, 0);
-
-            // const thing2 = Mesh.CreateBox("", .05, this.utilityScene);
-            // thing2.position = rotationCircle.getAbsolutePosition().clone();
-            // // thing2.position = rotationCircle.getAbsolutePosition().clone();
-            // thing2.position.addInPlace(direction);
-
-            // rotationCircle.addRotation(0, 0, angle);
             
         })
 
@@ -135,7 +121,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         gizmo.dragBehavior.onDragEndObservable.add(() => {
             dragDistance = 0;
             this.updateRotationCircle(rotationCircle, rotationCirclePaths, dragDistance, dragPlanePoint);
-            // rotationCircle.rotation = new Vector3(gizmo.attachedMesh?.rotation.x, gizmo.attachedMesh?.rotation.y, gizmo.attachedMesh?.rotation.z);
+            // Add rotation circle back to parent mesh after drag behavior
             parentMesh.addChild(rotationCircle);
 
         })
@@ -168,10 +154,9 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         }
 
         // Flip up vector depending on which side the camera is on
-        // console.log(this.utilityScene.activeCamera);
         if (this.utilityScene.activeCamera) {
             const camVec = this.utilityScene.activeCamera.position.subtract(gizmo?.attachedMesh?.position as any);
-            // console.log('regular', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
+            console.log('caulateRotationAngle ', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0);
             if (Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0) {
                 planeNormalTowardsCamera.scaleInPlace(-1);
                 localPlaneNormalTowardsCamera.scaleInPlace(-1);
@@ -185,32 +170,14 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
     }
 
     calculateAngle(originalVector: Vector3, newVector: Vector3, localPlaneNormalTowardsCamera: Vector3, gizmo: Gizmo, rotationMatrix: Matrix, planeNormalTowardsCamera: Vector3) {
+        
+        // Calculate Angle from rotation circle resting position, to gizmo click position
         const cross = Vector3.Cross(newVector, originalVector);
         const dot = Vector3.Dot(newVector, originalVector);
-        let angle = Math.atan2(cross.length(), dot);
-
-
-        // if (gizmo.updateGizmoRotationToMatchAttachedMesh) {
-        //     gizmo?.attachedMesh?.rotationQuaternion?.toRotationMatrix(rotationMatrix);
-        //     localPlaneNormalTowardsCamera = Vector3.TransformCoordinates(planeNormalTowardsCamera, rotationMatrix);
-        // }
-
-        // Flip up vector depending on which side the camera is on
-        // console.log(this.utilityScene.activeCamera);
-        if (this.utilityScene.activeCamera) {
-            const camVec = this.utilityScene.activeCamera.position.subtract(gizmo?._rootMesh.position as any);
-            // console.log('other', Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0)
-            if (Vector3.Dot(camVec, localPlaneNormalTowardsCamera) > 0) {
-                // planeNormalTowardsCamera.scaleInPlace(-1);
-                // localPlaneNormalTowardsCamera.scaleInPlace(-1);
-                // angle = -angle; 
-            }
-        }
-
-        // Calculate negative Drag
-        const halfCircleSide = Vector3.Dot(localPlaneNormalTowardsCamera, cross) > 0.0;
-        if (halfCircleSide) { angle = -angle; }
-        // console.log(angle, halfCircleSide);
+        let angle = Math.atan2(-cross.length(), -dot) + Math.PI;
+        // Flip if its cross has negitive y orientation
+        if (cross.y >= 0) angle = -angle;
+        console.log(new Angle(angle).degrees());
         return angle;
     }
 
