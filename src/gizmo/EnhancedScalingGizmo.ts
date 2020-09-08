@@ -1,9 +1,11 @@
-import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager } from "babylonjs";
+import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, CylinderBuilder, Color3 } from "babylonjs";
 import * as BABYLON from "babylonjs";
 import { EnhancedGizmo } from './EnhancedGizmo';
 
 
 export class EnhancedScalingGizmo extends EnhancedGizmo {
+
+    eventListeners: any[] = [];
 
     constructor(public scene: Scene) {
         super(scene);
@@ -84,14 +86,14 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
         }
 
         // On Drag Listener: to move gizmo mesh with user action
-        const destroyThis = gizmo.dragBehavior.onDragObservable.add(e => increaseGizmoMesh((e.delta as any)[axis]))
+        const sub1 = gizmo.dragBehavior.onDragObservable.add(e => increaseGizmoMesh((e.delta as any)[axis]))
 
         // On Drag End Listener: to reset the gizmo to original state
-        const destroyThisToo = gizmo.dragBehavior.onDragEndObservable.add(resetGizmoMesh)
+        const sub2 = gizmo.dragBehavior.onDragEndObservable.add(resetGizmoMesh)
 
-        const andThis = document.addEventListener('universalGizmoDrag', e => increaseGizmoMesh((e as any).detail))
+        const sub3 = document.addEventListener('universalGizmoDrag', e => increaseGizmoMesh((e as any).detail))
 
-        const andAlsoThis = document.addEventListener('universalGizmoEnd', resetGizmoMesh)
+        const sub4 = document.addEventListener('universalGizmoEnd', resetGizmoMesh)
 
 
         const temp = {
@@ -101,6 +103,21 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
             active: false
         };
         this.meshMap.set(parentMesh as any, temp);
+
+        // Add Mesh / Mat / Observables to global for destroy
+        this.materials = [...this.materials, material, hoverMaterial, invisibleMaterial];
+        this.meshes = [...this.meshes, parentMesh];
+        // this.observables = [sub1, sub2, sub3, sub4];
+        this.eventListeners = [
+            {
+                listener: 'universalGizmoDrag',
+                fn: increaseGizmoMesh
+            },
+            {
+                listener: 'universalGizmoEnd',
+                fn: resetGizmoMesh
+            }
+        ];
 
         return parentMesh;
     }
@@ -174,6 +191,10 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
         };
         this.meshMap.set(parentMesh as any, temp);
 
+        // Add Mesh / Mat / Observables to global for destroy
+        this.materials = [...this.materials, material, hoverMaterial, invisibleMaterial];
+        this.meshes = [...this.meshes, parentMesh];
+
         return parentMesh;
     }
 
@@ -195,6 +216,13 @@ export class EnhancedScalingGizmo extends EnhancedGizmo {
 
         return { nodeMesh };
 
+    }
+
+    destroy(){
+        this.eventListeners.forEach(e => {
+            document.addEventListener(e.listener, e.fn, false);
+        });
+        super.destroy();
     }
 
 }

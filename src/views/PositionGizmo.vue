@@ -36,6 +36,7 @@ import BabylonScene from "./BabylonScene.vue";
 import { UtilityLayerRenderer, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3 } from "babylonjs";
 import * as BABYLON from "babylonjs";
 import { EnhancedPositionGizmo } from "../gizmo/EnhancedPositionGizmo";
+import { EnhancedGizmo } from "../gizmo/EnhancedGizmo";
 
 @Component({
   components: {
@@ -46,11 +47,7 @@ export default class PositionGizmo extends Vue {
 
   // For UI
   features: any[] = [];
-
-  // For Gizmo
-  meshMap: Map<Mesh, any> = new Map();  // Node Caching for quick lookup
-  dragging = false;
-
+  gizmo: any = null;
 
   mounted(){
       fetch('/position.json')
@@ -79,8 +76,12 @@ export default class PositionGizmo extends Vue {
       }
   }
   gizmoSetup(scene: Scene) {
-    const gizmo = new EnhancedPositionGizmo(scene);
-    gizmo.create();
+    this.gizmo = new EnhancedPositionGizmo(scene);
+    this.gizmo.create();
+  }
+
+  destroyed() {
+    this.gizmo.destroy()
   }
 
 }

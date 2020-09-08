@@ -47,13 +47,8 @@ export default class RotationGizmo extends Vue {
   // For UI
   features: any[] = [];
 
-  // For Gizmo
-  meshMap: Map<Mesh, any> = new Map();  // Node Caching for quick lookup
-  dragging = false;
-
-
   mounted(){
-      fetch('/position.json')
+      fetch('/rotation.json')
         .then(res => res.json())
         .then(data => {
             this.features = data;

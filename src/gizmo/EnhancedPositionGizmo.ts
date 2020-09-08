@@ -1,4 +1,4 @@
-import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager } from "babylonjs";
+import { Scene, TransformNode, CylinderBuilder, Color3, StandardMaterial } from "babylonjs";
 import { EnhancedGizmo } from './EnhancedGizmo';
 
 
@@ -79,6 +79,7 @@ export class EnhancedPositionGizmo extends EnhancedGizmo {
             arrow.rotation.x = (Math.PI / 2) * -1;
         }
     
+        // Node Cachine for lookup
         const temp = {
             material,
             hoverMaterial,
@@ -86,6 +87,11 @@ export class EnhancedPositionGizmo extends EnhancedGizmo {
             active: false
         };
         this.meshMap.set(arrow as any, temp);
+
+        // Add Mesh / Mat / Observables to global for destroy
+        this.materials = [material, hoverMaterial, invisibleMaterial];
+        this.meshes = [arrow];
+
         return arrow;
     }
     

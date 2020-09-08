@@ -1,4 +1,4 @@
-import { AxisScaleGizmo, AbstractMesh, BoxBuilder, Scene, StandardMaterial, TransformNode, CylinderBuilder, Color3, Mesh, LinesMesh, Vector3, GizmoManager, MeshBuilder, PlaneRotationGizmo, BabylonFileLoaderConfiguration, Quaternion, Gizmo, Nullable, RotationGizmo, Matrix, Angle } from "babylonjs";
+import { AbstractMesh, Scene, Color3, Mesh, Vector3, PlaneRotationGizmo,Gizmo, Matrix, Angle } from "babylonjs";
 import * as BABYLON from "babylonjs";
 import { EnhancedGizmo } from './EnhancedGizmo';
 
@@ -24,22 +24,22 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         if(gizmo && gizmo.xGizmo && gizmo.yGizmo && gizmo.zGizmo) {
     
             // Set Custom Mesh X
-            const xMesh = this.createRotationMesh(gizmo.xGizmo, this.utilityScene, Color3.Red(), "x" );
+            const xMesh = this.createRotationMesh(gizmo.xGizmo, this.utilityScene, Color3.Red(), "x", new Vector3(1, 0, 0));
             gizmo.xGizmo.setCustomMesh(xMesh);
 
-            // // Set Custom Mesh Y
-            const yMesh = this.createRotationMesh(gizmo.yGizmo, this.utilityScene, Color3.Green(), "y" );
+            // Set Custom Mesh Y
+            const yMesh = this.createRotationMesh(gizmo.yGizmo, this.utilityScene, Color3.Green(), "y", new Vector3(0, 1, 0));
             gizmo.yGizmo.setCustomMesh(yMesh);
 
             // Set Custom Mesh Z
-            const zMesh = this.createRotationMesh(gizmo.zGizmo, this.utilityScene, Color3.Blue(), "z" )
+            const zMesh = this.createRotationMesh(gizmo.zGizmo, this.utilityScene, Color3.Blue(), "z", new Vector3(0, 0, 1))
             gizmo.zGizmo.setCustomMesh(zMesh);
 
             this.gizmoMouseObservers(this.utilityScene);
         }
     }
 
-    createRotationMesh(gizmo: PlaneRotationGizmo, scene: Scene, color: Color3, axis: string, tessellation = 32): any {
+    createRotationMesh(gizmo: PlaneRotationGizmo, scene: Scene, color: Color3, axis: string, planeNormal: Vector3, tessellation = 32): any {
 
         // Parent
         const parentMesh = new AbstractMesh("", this.utilityScene);
@@ -63,13 +63,6 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         parentMesh.addChild(rotationMesh);
         parentMesh.addChild(drag);
         parentMesh.scaling.scaleInPlace(1 / 3);
-
-        let planeNormal: Vector3 = new Vector3(1, 0, 0);
-        if(axis === 'y'){
-            planeNormal = new Vector3(0, 1, 0);
-        } else if(axis === 'z'){
-            planeNormal = new Vector3(0, 0, 1);
-        }
 
         // Axis Gizmo Closures
         let dragDistance = 0;
@@ -97,12 +90,11 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
             
             lastDragPosition.copyFrom(e.dragPlanePoint);
             dragPlanePoint = e.dragPlanePoint;
-            let originalVector = new Vector3(0, 0, 1);
-            originalVector = rotationCircle.getAbsolutePosition().clone().addInPlace(direction);
-            const clickedVector = e.dragPlanePoint;
-            let angle = this.calculateAngle(originalVector, clickedVector, localPlaneNormalTowardsCamera, gizmo, rotationMatrix, planeNormalTowardsCamera);
+            const originalRotationVector = rotationCircle.getAbsolutePosition().clone().addInPlace(direction);
+            const dragStartVector = e.dragPlanePoint;
+            let angle = this.calculateDragStartAngle(originalRotationVector, dragStartVector);
 
-             if(Vector3.Dot(rotationCircle.up, Vector3.Down()) > 0) {
+            if(Vector3.Dot(rotationCircle.up, Vector3.Down()) > 0) {
                 angle = -angle;
             }
             rotationCircle.addRotation(0, angle, 0);
@@ -126,6 +118,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
 
         })
     
+        // Node Caching for onHover Events
         const temp = {
             material,
             hoverMaterial,
@@ -134,6 +127,10 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         };
 
         this.meshMap.set(parentMesh as any, temp);
+
+        // Add Mesh / Mat / Observables to global for destroy
+        this.materials = [material, hoverMaterial, invisibleMaterial];
+        this.meshes = [parentMesh];
         return parentMesh;
     }
 
@@ -169,7 +166,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         return angle;
     }
 
-    calculateAngle(originalVector: Vector3, newVector: Vector3, localPlaneNormalTowardsCamera: Vector3, gizmo: Gizmo, rotationMatrix: Matrix, planeNormalTowardsCamera: Vector3) {
+    calculateDragStartAngle(originalVector: Vector3, newVector: Vector3) {
         
         // Calculate Angle from rotation circle resting position, to gizmo click position
         const cross = Vector3.Cross(newVector, originalVector);
@@ -219,6 +216,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
 
     updateRotationPath(pathArr: any[], newFill: number) {
 
+        // To update the Ribbon, you have to mutate the pathArray in-place
         const step = this.circleConstants.pi2 / this.circleConstants.tessellation;
         let tessilationCounter = 0;
         for (let p = -Math.PI / 2; p < Math.PI / 2 - 1.5; p += step / 2) {
