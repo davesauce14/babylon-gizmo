@@ -90,9 +90,10 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
             
             lastDragPosition.copyFrom(e.dragPlanePoint);
             dragPlanePoint = e.dragPlanePoint;
+            const origin = rotationCircle.getAbsolutePosition().clone();
             const originalRotationVector = rotationCircle.getAbsolutePosition().clone().addInPlace(direction);
             const dragStartVector = e.dragPlanePoint;
-            let angle = this.calculateDragStartAngle(originalRotationVector, dragStartVector);
+            let angle = this.calculateDragStartAngle(origin, originalRotationVector, dragStartVector);
 
             if(Vector3.Dot(rotationCircle.up, Vector3.Down()) > 0) {
                 angle = -angle;
@@ -166,7 +167,7 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         return angle;
     }
 
-    calculateDragStartAngle(originalVector: Vector3, newVector: Vector3) {
+    calculateDragStartAngle(origin: Vector3, originalVector: Vector3, newVector: Vector3) {
         
         // Calculate Angle from rotation circle resting position, to gizmo click position
         const cross = Vector3.Cross(newVector, originalVector);
@@ -174,7 +175,64 @@ export class EnhancedRotationGizmo extends EnhancedGizmo {
         let angle = Math.atan2(-cross.length(), -dot) + Math.PI;
         // Flip if its cross has negitive y orientation
         if (cross.y >= 0) angle = -angle;
-        console.log(new Angle(angle).degrees());
+        // console.log(new Angle(angle).degrees());
+        console.log('regular', (cross.y >= 0), angle);
+
+        const angle2 = this.angleBetween3DCoords(originalVector, origin, newVector);
+
+
+        return angle2;
+    }
+
+    angleBetween3DCoords(coord1: Vector3, coord2: Vector3, coord3: Vector3) {
+        // Calculate vector between points 1 and 2
+        const v1 = {
+            x: coord1.x - coord2.x,
+            y: coord1.y - coord2.y,
+            z: coord1.z - coord2.z,
+        };
+
+        // Calculate vector between points 2 and 3
+        const v2 = {
+            x: coord3.x - coord2.x,
+            y: coord3.y - coord2.y,
+            z: coord3.z - coord2.z,
+        };
+
+        // The dot product of vectors v1 & v2 is a function of the cosine of the
+        // angle between them (it's scaled by the product of their magnitudes).
+
+        // Normalize v1
+        const v1mag = Math.sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
+        const v1norm = {
+            x: v1.x / v1mag,
+            y: v1.y / v1mag,
+            z: v1.z / v1mag,
+        };
+
+        // Normalize v2
+        const v2mag = Math.sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
+        const v2norm = {
+            x: v2.x / v2mag,
+            y: v2.y / v2mag,
+            z: v2.z / v2mag,
+        };
+
+        // Calculate the dot products of vectors v1 and v2
+        const dotProducts = v1norm.x * v2norm.x + v1norm.y * v2norm.y + v1norm.z * v2norm.z;
+        const cross = Vector3.Cross(v1norm as any, v2norm as any);
+        const dot = Vector3.Dot(v1norm as any, v2norm as any);
+
+        // Extract the angle from the dot productsx 
+        let angle = (Math.acos(dotProducts) * 180.0) / Math.PI;
+        angle = Math.round(angle * 1000) / 1000;
+        // if (cross.y >= 0) angle = angle * -1;
+        angle = Angle.FromDegrees(angle).radians();
+        
+        if ((cross.y < 0)) angle = -angle; 
+        console.log('enhanced', (cross.y < 0), angle);
+
+        // Round result to 3 decimal points and return
         return angle;
     }
 
